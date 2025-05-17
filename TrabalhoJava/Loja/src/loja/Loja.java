@@ -2,6 +2,11 @@ package loja;
 
 import java.util.Scanner;
 
+class ResultadoLogin {
+    public boolean vaiProMenu;
+    public Usuario usuarioLogado;
+}
+
 public class Loja {
 		
 		private Usuario[] usuarios;
@@ -10,63 +15,21 @@ public class Loja {
 		{								
 			Boolean vaiProMenu = false;
 			Loja loja = new Loja();
-			String escolha;
+			String escolha = "";
 			Scanner sc = new Scanner(System.in);
 			Usuario usuarioLogado = null;
-			
+						
 			while(!vaiProMenu)
 			{
-				System.out.println("=================================");
-				System.out.println("BEM VINDO A LOJA");
-				System.out.println("[1] REALIZAR LOGIN");
-				System.out.println("[2] CRIAR USUARIO");				
-				System.out.println("[0] SAIR");
-				System.out.println("=================================");	
-				escolha = sc.nextLine();
-				if("1".equals(escolha))
-				{
-					
-					Usuario userTemp = loja.realizarLogin(sc);
-					if(userTemp != null)
-					{
-						usuarioLogado = userTemp;
-						vaiProMenu = true;
-					}
-					
-				}else if("2".equals(escolha))
-				{			
-					Usuario userTemp = loja.criarUsuario(sc);
-					if(userTemp != null)
-					{
-						System.out.println("Quer logar automaticamente[S/N]");						
+				ResultadoLogin retorno = loja.menuUsuario(sc, escolha, loja);
+				vaiProMenu = retorno.vaiProMenu;
+				usuarioLogado = retorno.usuarioLogado;				
+			}		
 						
-						if("S".equals(sc.nextLine().toUpperCase()))
-						{
-							usuarioLogado = userTemp;
-							vaiProMenu = true;
-						}else if("N".equals(sc.nextLine().toUpperCase())) {
-							vaiProMenu = false;
-						}else {
-							System.out.println("Opção invalida");
-						}
-					}
-					
-				}else if("3".equals(escolha))
-				{			
-					loja.atualizarUsuario(sc, usuarioLogado);
-					
-				}
-				else if("0".equals(escolha))
-				{
-					break;
-				}
-			}
-			
 			if(vaiProMenu)
-			{				
+			{							
 				while(vaiProMenu)
-				{
-					System.out.println(usuarioLogado);
+				{					
 					System.out.println("=================================");
 					System.out.println("BEM VINDO A LOJA");					
 					System.out.println("[1] CONSULTAR PRODUTOS");
@@ -80,8 +43,10 @@ public class Loja {
 						System.out.println("[7] EDITAR USUARIO");
 						System.out.println("[8] DELETAR USUARIO");	
 						System.out.println("[9] ADICIONAR USUARIOS");
-					}					
-					System.out.println("[0] SAIR");
+						System.out.println("[10] CONSULTAR USUARIOS");
+					}			
+					System.out.println("[11] FAZER LOGOUT");
+					System.out.println("[0] SAIR DO PROGRAMA");
 					System.out.println("=================================");	
 					escolha = sc.nextLine();
 					switch(escolha)
@@ -101,6 +66,14 @@ public class Loja {
 					    	loja.criarUsuario(sc);
 					    	break;
 					    }
+					    case("10"):
+					    	loja.consultarUsuarios();
+					    	break;
+					    case("11"):	   	
+						    ResultadoLogin retorno = loja.menuUsuario(sc, escolha, loja);
+						    usuarioLogado = retorno.usuarioLogado;
+						    					    
+					    	break;
 						case("0"):
 						{
 							vaiProMenu = false;
@@ -112,10 +85,62 @@ public class Loja {
 						}
 					}
 				}	
-			}	
+			}
 			
 			System.out.println("OBRIGADO, VOLTE SEMPRE!");
 			sc.close();
+		}
+		
+		public ResultadoLogin menuUsuario(Scanner sc, String escolha, Loja loja)
+		{
+			ResultadoLogin resultado = new ResultadoLogin();
+			while(true)
+			{				
+				System.out.println("=================================");
+				System.out.println("BEM VINDO A LOJA");
+				System.out.println("[1] REALIZAR LOGIN");
+				System.out.println("[2] CRIAR USUARIO");				
+				System.out.println("[0] SAIR");
+				System.out.println("=================================");	
+				escolha = sc.nextLine();
+				if("1".equals(escolha))
+				{
+					
+					Usuario userTemp = loja.realizarLogin(sc);
+					if(userTemp != null)
+					{
+						resultado.usuarioLogado = userTemp;
+						resultado.vaiProMenu = true;
+						break;
+					}
+					
+				}else if("2".equals(escolha))
+				{			
+					Usuario userTemp = loja.criarUsuario(sc);
+					if(userTemp != null)
+					{
+						System.out.println("Quer logar automaticamente[S/N]");						
+						
+						if("S".equals(sc.nextLine().toUpperCase()))
+						{
+							resultado.usuarioLogado = userTemp;
+							resultado.vaiProMenu =  true;
+							break;
+						}else if("N".equals(sc.nextLine().toUpperCase())) {
+							resultado.vaiProMenu = false;
+						}else {
+							System.out.println("Opção invalida");
+						}
+					}
+					
+				}
+				else if("0".equals(escolha))
+				{
+					break;
+				}
+			}
+			
+			return resultado;
 		}
 		
 		
@@ -127,7 +152,7 @@ public class Loja {
 			String senha = sc.nextLine();
 				
 			Usuario usuario = new Usuario(email, senha);
-					
+								
 			Usuario tempUsuario = usuario.validaLogin(usuarios);
 			if(tempUsuario != null)
 			{
@@ -156,7 +181,7 @@ public class Loja {
 				
 			Usuario usuario = new Usuario(nome, email, senha, nivel);
 
-			usuarios = usuario.criaUsuario(usuarios);
+			this.usuarios = usuario.criaUsuario(this.usuarios);
 			if(usuarios != null) {
 			    System.out.println("Usuario criado com sucesso");
 			    System.out.println(usuario);
@@ -174,14 +199,14 @@ public class Loja {
 			int nivelLogado = usuarioLogado.getNivel();
 			
 			//Se for administrador poderá editar qualquer usuario
-			if(nivelLogado == ehAdministrador && usuarios.length > 0)
+			if(nivelLogado == ehAdministrador && this.usuarios.length > 0)
 			{
-				for(int i = 0; i < usuarios.length; i++)
+				for(int i = 0; i < this.usuarios.length; i++)
 				{
-					if(usuarios[i] != null)
+					if(this.usuarios[i] != null)
 					{
 						System.out.println("==============================");
-						System.out.println(usuarios[i]);
+						System.out.println(this.usuarios[i]);
 						System.out.println("==============================");
 					}
 					
@@ -192,13 +217,13 @@ public class Loja {
 				sc.nextLine();
 				
 				Usuario usuarioParaAtualizar = null;
-				for(int i = 0; i < usuarios.length; i++)
+				for(int i = 0; i < this.usuarios.length; i++)
 				{
 					if(usuarios[i] != null)
 					{
-						if(usuarios[i].getUserId() == escolha)
+						if(this.usuarios[i].getUserId() == escolha)
 						{
-							usuarioParaAtualizar = usuarios[i];
+							usuarioParaAtualizar = this.usuarios[i];
 							break;
 						}
 					}					
@@ -207,7 +232,7 @@ public class Loja {
 				if(usuarioParaAtualizar != null)
 				{
 					String nome = usuarioParaAtualizar.getNome();
-					System.out.println("Deseja editar o nome");
+					System.out.println("Deseja editar o nome?");
 					System.out.println("Digite S para editar ou pressione qualquer tecla para continuar");
 					
 					if("S".equals(sc.nextLine().toUpperCase())){
@@ -218,14 +243,17 @@ public class Loja {
 					String email = usuarioParaAtualizar.getEmail();
 					System.out.println("Deseja editar o email?");
 					System.out.println("Digite S para editar ou pressione qualquer tecla para continuar");
+					
 					if ("S".equals(sc.nextLine().toUpperCase())) {
 					    System.out.println("Digite o novo email:");
 					    email = sc.nextLine();
+					    System.out.println("Email: " + email);
 					}
 
 					String senha = usuarioParaAtualizar.getSenha();
 					System.out.println("Deseja editar a senha?");
 					System.out.println("Digite S para editar ou pressione qualquer tecla para continuar");
+					
 					if ("S".equals(sc.nextLine().toUpperCase())) {
 					    System.out.println("Digite a nova senha:");
 					    senha = sc.nextLine();
@@ -234,6 +262,7 @@ public class Loja {
 					int nivel = usuarioParaAtualizar.getNivel();
 					System.out.println("Deseja editar o nível?");
 					System.out.println("Digite S para editar ou pressione qualquer tecla para continuar");
+					
 					if ("S".equals(sc.nextLine().toUpperCase())) {
 					    System.out.println("Digite o novo nível:");
 					    System.out.println("[1] Administrador");
@@ -242,7 +271,7 @@ public class Loja {
 					    sc.nextLine(); // Limpar buffer
 					}
 					
-					usuarioParaAtualizar.atualizaUsuario(nome, email, senha, nivel, usuarios);
+					usuarioParaAtualizar.atualizaUsuario(nome, email, senha, nivel, this.usuarios);
 					
 				}else {
 					System.out.println("Usuario não encontrado");
@@ -269,12 +298,12 @@ public class Loja {
 			//Se for administrador poderá editar qualquer usuario
 			if(nivelLogado == ehAdministrador)
 			{
-				for(int i = 0; i < usuarios.length; i++)
+				for(int i = 0; i < this.usuarios.length; i++)
 				{
 					if(usuarios[i] != null)
 					{
 						System.out.println("==============================");
-						System.out.println(usuarios[i]);
+						System.out.println(this.usuarios[i]);
 						System.out.println("==============================");
 					}
 					
@@ -287,11 +316,11 @@ public class Loja {
 				Usuario usuarioParaExcluir = null;
 				for(int i = 0; i < usuarios.length; i++)
 				{
-					if(usuarios[i] != null)
+					if(this.usuarios[i] != null)
 					{
-						if(usuarios[i].getUserId() == escolha)
+						if(this.usuarios[i].getUserId() == escolha)
 						{
-							usuarioParaExcluir = usuarios[i];
+							usuarioParaExcluir = this.usuarios[i];
 							break;
 						}
 					}					
@@ -299,7 +328,7 @@ public class Loja {
 				
 				if(usuarioParaExcluir != null)
 				{				
-					Boolean deleta = usuarioParaExcluir.deletaUsuario(usuarios);
+					Boolean deleta = usuarioParaExcluir.deletaUsuario(this.usuarios);
 					if(deleta)
 					{						
 						System.out.println("Usuário deletado com sucesso");
@@ -308,6 +337,22 @@ public class Loja {
 					System.out.println("Usuario não encontrado");					
 				}		
 						
+			}
+		}
+		
+		public void consultarUsuarios()
+		{
+			if(this.usuarios.length > 0)
+			{
+				for(int i = 0; i < usuarios.length; i++)
+				{
+					if(usuarios[i] != null)
+					{
+						System.out.println(usuarios[i] + "\n");					
+					}
+				}				
+			}else {
+				System.out.println("Nenhum usuario cadastrado");
 			}
 		}
 	
